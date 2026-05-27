@@ -16,7 +16,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 
-export type SandboxType = "vercel";
+export type SandboxType = "vercel" | "e2b";
 
 interface SandboxOption {
   id: SandboxType;
@@ -28,6 +28,11 @@ export const SANDBOX_OPTIONS: SandboxOption[] = [
   {
     id: "vercel",
     name: "Vercel",
+    description: "Cloud sandbox",
+  },
+  {
+    id: "e2b",
+    name: "E2B",
     description: "Cloud sandbox",
   },
 ];

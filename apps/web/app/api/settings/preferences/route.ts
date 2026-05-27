@@ -6,6 +6,7 @@ import {
 } from "@/lib/db/user-preferences";
 import { sanitizeUserPreferencesForSession } from "@/lib/model-access";
 import type { SandboxType } from "@/components/sandbox-selector-compact";
+import { SANDBOX_PROVIDERS } from "@open-agents/sandbox";
 import {
   globalSkillRefsSchema,
   type GlobalSkillRef,
@@ -55,7 +56,7 @@ export async function PATCH(req: Request) {
   const updates: UpdatePreferencesRequest = {};
 
   if (body.defaultSandboxType !== undefined) {
-    const validTypes = ["vercel"];
+    const validTypes = SANDBOX_PROVIDERS;
     if (
       typeof body.defaultSandboxType !== "string" ||
       !validTypes.includes(body.defaultSandboxType)

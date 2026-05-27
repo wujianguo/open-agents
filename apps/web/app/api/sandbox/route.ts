@@ -1,4 +1,9 @@
-import { connectSandbox, type SandboxState } from "@open-agents/sandbox";
+import {
+  connectSandbox,
+  SANDBOX_PROVIDERS,
+  type SandboxProvider,
+  type SandboxState,
+} from "@open-agents/sandbox";
 import {
   requireAuthenticatedUser,
   requireOwnedSession,
@@ -45,7 +50,7 @@ interface CreateSandboxRequest {
   branch?: string;
   isNewBranch?: boolean;
   sessionId?: string;
-  sandboxType?: "vercel";
+  sandboxType?: SandboxProvider;
 }
 
 // async function syncVercelProjectEnvVarsToSandbox(params: {
@@ -101,7 +106,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (body.sandboxType && body.sandboxType !== "vercel") {
+  if (body.sandboxType && !SANDBOX_PROVIDERS.includes(body.sandboxType)) {
     return Response.json({ error: "Invalid sandbox type" }, { status: 400 });
   }
 
@@ -144,6 +149,8 @@ export async function POST(req: Request) {
   sessionRecord = sessionContext.sessionRecord;
 
   const sandboxName = getSessionSandboxName(sessionId);
+  const sandboxType =
+    body.sandboxType ?? sessionRecord?.sandboxState?.type ?? "vercel";
 
   const source = repoUrl
     ? {
@@ -209,7 +216,7 @@ export async function POST(req: Request) {
 
     sandbox = await connectSandbox({
       state: {
-        type: "vercel",
+        type: sandboxType,
         ...(sandboxName ? { sandboxName } : {}),
         source,
       },
@@ -283,7 +290,7 @@ export async function POST(req: Request) {
     createdAt: Date.now(),
     timeout: DEFAULT_SANDBOX_TIMEOUT_MS,
     currentBranch: repoUrl ? branch : undefined,
-    mode: "vercel",
+    mode: sandboxType,
     timing: { readyMs },
   });
 }

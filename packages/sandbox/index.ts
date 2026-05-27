@@ -55,4 +55,11 @@ export {
 } from "./vercel";
 
 // e2b
-export { connectE2B, type E2BState } from "./e2b";
+export {
+  connectE2B,
+  connectE2BSandbox,
+  E2BSandbox,
+  type E2BState,
+  type E2BSandboxConfig,
+  type E2BSandboxConnectConfig,
+} from "./e2b";

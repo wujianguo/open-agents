@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   connectSandbox,
+  isSandboxProvider,
   type Sandbox,
   type SandboxState,
 } from "@open-agents/sandbox";
@@ -69,7 +70,7 @@ function isSandboxState(value: unknown): value is SandboxState {
     typeof value === "object" &&
     value !== null &&
     "type" in value &&
-    value.type === "vercel"
+    isSandboxProvider(value.type)
   );
 }
 
@@ -111,7 +112,7 @@ function buildSandboxState(session: SessionRecord): SandboxState {
   const source = buildSandboxSource(session);
 
   return {
-    type: "vercel",
+    type: isSandboxState(existingState) ? existingState.type : "vercel",
     ...(isSandboxState(existingState) ? existingState : {}),
     sandboxName,
     ...(source ? { source } : {}),

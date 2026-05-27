@@ -1,4 +1,8 @@
 import { nanoid } from "nanoid";
+import {
+  SANDBOX_PROVIDERS,
+  type SandboxProvider,
+} from "@open-agents/sandbox";
 import { checkBotProtection } from "@/lib/botid";
 import {
   countSessionsByUserId,
@@ -45,7 +49,7 @@ interface CreateSessionRequest {
   branch?: string;
   cloneUrl?: string;
   isNewBranch?: boolean;
-  sandboxType?: "vercel";
+  sandboxType?: SandboxProvider;
   autoCommitPush?: boolean;
   autoCreatePr?: boolean;
   vercelProject?: VercelProjectSelection | null;
@@ -219,7 +223,7 @@ export async function POST(req: Request) {
     );
   }
 
-  if (body.sandboxType && body.sandboxType !== "vercel") {
+  if (body.sandboxType && !SANDBOX_PROVIDERS.includes(body.sandboxType)) {
     return Response.json({ error: "Invalid sandbox type" }, { status: 400 });
   }
 

@@ -8,11 +8,14 @@
     ".": "./index.ts",
     "./interface.js": "./interface.ts",
     "./types.js": "./types.ts",
+    "./provider.js": "./provider.ts",
     "./vercel": "./vercel/index.ts",
     "./vercel/index.js": "./vercel/index.ts",
     "./vercel/snapshot-refresh.js": "./vercel/snapshot-refresh.ts",
     "./vercel/sandbox.js": "./vercel/sandbox.ts",
-    "./vercel/config.js": "./vercel/config.ts"
+    "./vercel/config.js": "./vercel/config.ts",
+    "./e2b": "./e2b/index.ts",
+    "./e2b/index.js": "./e2b/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

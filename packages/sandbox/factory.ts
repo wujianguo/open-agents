@@ -1,6 +1,9 @@
 import type { Sandbox, SandboxHooks } from "./interface";
 import type { SandboxStatus } from "./types";
+import type { SandboxProvider } from "./provider";
+import { connectE2B } from "./e2b/connect";
 import { connectVercel } from "./vercel/connect";
+import type { E2BState } from "./e2b/state";
 import type { VercelState } from "./vercel/state";
 
 // Re-export SandboxStatus from types for convenience
@@ -10,7 +13,9 @@ export type { SandboxStatus };
  * Unified sandbox state type.
  * Use `type` discriminator to determine which sandbox implementation to use.
  */
-export type SandboxState = { type: "vercel" } & VercelState;
+export type SandboxState =
+  | ({ type: "vercel" } & VercelState)
+  | ({ type: "e2b" } & E2BState);
 
 /**
  * Base connect options for all sandbox types.
@@ -50,8 +55,18 @@ export interface ConnectOptions {
  * Configuration for connecting to a sandbox.
  */
 export type SandboxConnectConfig = {
-  state: { type: "vercel" } & VercelState;
+  state: SandboxState;
   options?: ConnectOptions;
+};
+
+const PROVIDER_CONNECTORS: {
+  [K in SandboxProvider]: (
+    state: Extract<SandboxState, { type: K }>,
+    options?: ConnectOptions,
+  ) => Promise<Sandbox>;
+} = {
+  vercel: connectVercel,
+  e2b: connectE2B,
 };
 
 /**
@@ -69,9 +84,11 @@ export async function connectSandbox(
 
   if (isNewApi) {
     const config = configOrState as SandboxConnectConfig;
-    return connectVercel(config.state, config.options);
+    const connector = PROVIDER_CONNECTORS[config.state.type];
+    return connector(config.state as never, config.options);
   }
 
   const state = configOrState as SandboxState;
-  return connectVercel(state, legacyOptions);
+  const connector = PROVIDER_CONNECTORS[state.type];
+  return connector(state as never, legacyOptions);
 }

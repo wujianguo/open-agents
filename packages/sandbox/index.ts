@@ -11,6 +11,12 @@ export type {
 
 // shared types
 export type { Source, FileEntry, SandboxStatus } from "./types";
+export {
+  SANDBOX_PROVIDERS,
+  DEFAULT_SANDBOX_PROVIDER,
+  isSandboxProvider,
+  type SandboxProvider,
+} from "./provider";
 
 // factory
 export {
@@ -47,3 +53,6 @@ export {
   type VercelSandboxConnectConfig,
   type VercelState,
 } from "./vercel";
+
+// e2b
+export { connectE2B, type E2BState } from "./e2b";

@@ -11,6 +11,6 @@ export async function connectE2B(
   _options?: ConnectOptions,
 ): Promise<Sandbox> {
   throw new Error(
-    "E2B sandbox provider is not configured yet. Add an E2B runtime adapter before enabling type='e2b'.",
+    "E2B sandbox provider is not configured yet. Add an E2B runtime adapter before using the E2B provider.",
   );
 }

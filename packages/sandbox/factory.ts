@@ -59,7 +59,7 @@ export type SandboxConnectConfig = {
   options?: ConnectOptions;
 };
 
-const PROVIDER_CONNECTORS: {
+const providerConnectors: {
   [K in SandboxProvider]: (
     state: Extract<SandboxState, { type: K }>,
     options?: ConnectOptions,
@@ -68,6 +68,18 @@ const PROVIDER_CONNECTORS: {
   vercel: connectVercel,
   e2b: connectE2B,
 };
+
+function connectWithProvider(
+  state: SandboxState,
+  options?: ConnectOptions,
+): Promise<Sandbox> {
+  switch (state.type) {
+    case "vercel":
+      return providerConnectors.vercel(state, options);
+    case "e2b":
+      return providerConnectors.e2b(state, options);
+  }
+}
 
 /**
  * Connect to a sandbox based on the provided configuration.
@@ -84,11 +96,9 @@ export async function connectSandbox(
 
   if (isNewApi) {
     const config = configOrState as SandboxConnectConfig;
-    const connector = PROVIDER_CONNECTORS[config.state.type];
-    return connector(config.state as never, config.options);
+    return connectWithProvider(config.state, config.options);
   }
 
   const state = configOrState as SandboxState;
-  const connector = PROVIDER_CONNECTORS[state.type];
-  return connector(state as never, legacyOptions);
+  return connectWithProvider(state, legacyOptions);
 }

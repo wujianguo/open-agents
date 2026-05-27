@@ -12,6 +12,8 @@ import type { E2BState } from "./state";
 
 const MAX_OUTPUT_LENGTH = 50_000;
 const DEFAULT_WORKING_DIRECTORY = "/home/user/workspace";
+// Quick probe window for detached commands to catch immediate boot failures.
+// Commands that fail after this window are treated as successfully detached.
 const DETACHED_QUICK_FAILURE_WINDOW_MS = 2_000;
 const DEFAULT_TIMEOUT_MS = 300_000;
 const METADATA_SANDBOX_NAME_KEY = "open_agents_sandbox_name";
@@ -85,6 +87,33 @@ async function runCommandOrThrow(
   }
 }
 
+async function configureGitHubToken(
+  sandbox: E2BSandboxSDK,
+  token?: string,
+  envs?: Record<string, string>,
+): Promise<void> {
+  await runCommandOrThrow(
+    sandbox,
+    "git config --global --unset-all http.https://github.com/.extraheader || true",
+    "/",
+    envs,
+  );
+
+  if (!token) {
+    return;
+  }
+
+  const basicAuthToken = Buffer.from(`x-access-token:${token}`, "utf-8").toString(
+    "base64",
+  );
+  await runCommandOrThrow(
+    sandbox,
+    `git config --global http.https://github.com/.extraheader ${shellQuote(`AUTHORIZATION: basic ${basicAuthToken}`)}`,
+    "/",
+    envs,
+  );
+}
+
 export class E2BSandbox implements Sandbox {
   readonly type = "cloud" as const;
   readonly id: string;
@@ -99,6 +128,8 @@ export class E2BSandbox implements Sandbox {
   private isStopped = false;
   private _expiresAt?: number;
   private _timeout?: number;
+  private source?: E2BState["source"];
+  private snapshotId?: string;
 
   get expiresAt(): number | undefined {
     return this._expiresAt;
@@ -117,6 +148,8 @@ export class E2BSandbox implements Sandbox {
     timeout?: number;
     startTime?: number;
     name?: string;
+    source?: E2BState["source"];
+    snapshotId?: string;
   }) {
     this.sdk = params.sdk;
     this.id = params.sdk.sandboxId;
@@ -126,6 +159,8 @@ export class E2BSandbox implements Sandbox {
     this.hooks = params.hooks;
     this.host = toDomainUrl(params.sdk.sandboxDomain);
     this.name = params.name;
+    this.source = params.source;
+    this.snapshotId = params.snapshotId;
 
     if (params.timeout !== undefined && params.startTime !== undefined) {
       this._timeout = params.timeout;
@@ -138,40 +173,6 @@ export class E2BSandbox implements Sandbox {
       ...(this.env ?? {}),
       ...(extra ?? {}),
     };
-  }
-
-  private async configureGitHubToken(token?: string): Promise<void> {
-    const clearHeaderCommand =
-      "git config --global --unset-all http.https://github.com/.extraheader || true";
-    const clearResult = await this.exec(
-      clearHeaderCommand,
-      this.workingDirectory,
-      20_000,
-    );
-    if (!clearResult.success) {
-      throw new Error(
-        `Failed to clear GitHub auth header: ${clearResult.stderr || clearResult.stdout}`,
-      );
-    }
-
-    if (!token) {
-      return;
-    }
-
-    const basicAuthToken = Buffer.from(
-      `x-access-token:${token}`,
-      "utf-8",
-    ).toString("base64");
-    const setResult = await this.exec(
-      `git config --global http.https://github.com/.extraheader ${shellQuote(`AUTHORIZATION: basic ${basicAuthToken}`)}`,
-      this.workingDirectory,
-      20_000,
-    );
-    if (!setResult.success) {
-      throw new Error(
-        `Failed to set GitHub auth header: ${setResult.stderr || setResult.stdout}`,
-      );
-    }
   }
 
   static async create(config: E2BSandboxConfig = {}): Promise<E2BSandbox> {
@@ -204,18 +205,8 @@ export class E2BSandbox implements Sandbox {
       env,
     );
 
-    const sandbox = new E2BSandbox({
-      sdk,
-      workingDirectory: DEFAULT_WORKING_DIRECTORY,
-      env,
-      hooks,
-      timeout,
-      startTime: Date.now(),
-      name,
-    });
-
     if (githubToken) {
-      await sandbox.configureGitHubToken(githubToken);
+      await configureGitHubToken(sdk, githubToken, env);
     }
 
     try {
@@ -280,7 +271,7 @@ export class E2BSandbox implements Sandbox {
         currentBranch = source.branch;
       }
 
-      const initializedSandbox = new E2BSandbox({
+      const sandbox = new E2BSandbox({
         sdk,
         workingDirectory: DEFAULT_WORKING_DIRECTORY,
         env,
@@ -289,16 +280,18 @@ export class E2BSandbox implements Sandbox {
         timeout,
         startTime: Date.now(),
         name,
+        source,
+        snapshotId: restoreSnapshotId,
       });
 
       if (hooks?.afterStart) {
-        await hooks.afterStart(initializedSandbox);
+        await hooks.afterStart(sandbox);
       }
 
-      return initializedSandbox;
+      return sandbox;
     } finally {
       if (githubToken) {
-        await sandbox.configureGitHubToken(undefined);
+        await configureGitHubToken(sdk, undefined, env);
       }
     }
   }
@@ -514,7 +507,7 @@ export class E2BSandbox implements Sandbox {
   }
 
   async setGitHubAuthToken(token?: string): Promise<void> {
-    await this.configureGitHubToken(token);
+    await configureGitHubToken(this.sdk, token, this.getCommandEnv());
   }
 
   async extendTimeout(additionalMs: number): Promise<{ expiresAt: number }> {
@@ -566,6 +559,8 @@ export class E2BSandbox implements Sandbox {
       type: "e2b",
       ...(this.name ? { sandboxName: this.name } : {}),
       sandboxId: this.id,
+      ...(this.source ? { source: this.source } : {}),
+      ...(this.snapshotId ? { snapshotId: this.snapshotId } : {}),
       ...(this.expiresAt !== undefined ? { expiresAt: this.expiresAt } : {}),
     };
   }

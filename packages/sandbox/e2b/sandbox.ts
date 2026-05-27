@@ -8,12 +8,13 @@ import type {
   SnapshotResult,
 } from "../interface";
 import type { E2BSandboxConfig, E2BSandboxConnectConfig } from "./config";
-import type { E2BState } from "./state";
+import type { E2BState, E2BSandboxState } from "./state";
 
 const MAX_OUTPUT_LENGTH = 50_000;
 const DEFAULT_WORKING_DIRECTORY = "/home/user/workspace";
 // Quick probe window for detached commands to catch immediate boot failures.
-// Commands that fail after this window are treated as successfully detached.
+// A short value keeps detached starts responsive, but failures after this
+// window are surfaced only when callers inspect long-running process state.
 const DETACHED_QUICK_FAILURE_WINDOW_MS = 2_000;
 const DEFAULT_TIMEOUT_MS = 300_000;
 const METADATA_SANDBOX_NAME_KEY = "open_agents_sandbox_name";
@@ -103,12 +104,13 @@ async function configureGitHubToken(
     return;
   }
 
-  const basicAuthToken = Buffer.from(`x-access-token:${token}`, "utf-8").toString(
-    "base64",
-  );
+  const base64EncodedToken = Buffer.from(
+    `x-access-token:${token}`,
+    "utf-8",
+  ).toString("base64");
   await runCommandOrThrow(
     sandbox,
-    `git config --global http.https://github.com/.extraheader ${shellQuote(`AUTHORIZATION: basic ${basicAuthToken}`)}`,
+    `git config --global http.https://github.com/.extraheader ${shellQuote(`AUTHORIZATION: basic ${base64EncodedToken}`)}`,
     "/",
     envs,
   );
@@ -198,15 +200,19 @@ export class E2BSandbox implements Sandbox {
       metadata: name ? { [METADATA_SANDBOX_NAME_KEY]: name } : undefined,
     });
 
-    await runCommandOrThrow(
-      sdk,
-      `mkdir -p ${shellQuote(DEFAULT_WORKING_DIRECTORY)}`,
-      "/",
-      env,
-    );
+    if (!source && !skipGitWorkspaceBootstrap) {
+      await runCommandOrThrow(
+        sdk,
+        `mkdir -p ${shellQuote(DEFAULT_WORKING_DIRECTORY)}`,
+        "/",
+        env,
+      );
+    }
 
+    let didConfigureGitHubToken = false;
     if (githubToken) {
       await configureGitHubToken(sdk, githubToken, env);
+      didConfigureGitHubToken = true;
     }
 
     try {
@@ -225,7 +231,7 @@ export class E2BSandbox implements Sandbox {
           sdk,
           "git init",
           DEFAULT_WORKING_DIRECTORY,
-          sandbox.getCommandEnv(),
+          env,
         );
       }
 
@@ -234,13 +240,13 @@ export class E2BSandbox implements Sandbox {
           sdk,
           `git config user.name ${shellQuote(gitUser.name)}`,
           DEFAULT_WORKING_DIRECTORY,
-          sandbox.getCommandEnv(),
+          env,
         );
         await runCommandOrThrow(
           sdk,
           `git config user.email ${shellQuote(gitUser.email)}`,
           DEFAULT_WORKING_DIRECTORY,
-          sandbox.getCommandEnv(),
+          env,
         );
       }
 
@@ -254,7 +260,7 @@ export class E2BSandbox implements Sandbox {
           sdk,
           "git commit --allow-empty -m 'Initial commit'",
           DEFAULT_WORKING_DIRECTORY,
-          sandbox.getCommandEnv(),
+          env,
         );
       }
 
@@ -264,7 +270,7 @@ export class E2BSandbox implements Sandbox {
           sdk,
           `git checkout -b ${shellQuote(source.newBranch)}`,
           DEFAULT_WORKING_DIRECTORY,
-          sandbox.getCommandEnv(),
+          env,
         );
         currentBranch = source.newBranch;
       } else if (source?.branch) {
@@ -290,7 +296,7 @@ export class E2BSandbox implements Sandbox {
 
       return sandbox;
     } finally {
-      if (githubToken) {
+      if (githubToken && didConfigureGitHubToken) {
         await configureGitHubToken(sdk, undefined, env);
       }
     }
@@ -343,6 +349,8 @@ export class E2BSandbox implements Sandbox {
   }
 
   async readFile(path: string, _encoding: "utf-8"): Promise<string> {
+    // E2B text file reads are UTF-8 by default, so the encoding argument is
+    // accepted for interface compatibility but does not affect behavior.
     return this.sdk.files.read(path, { format: "text" });
   }
 
@@ -554,7 +562,7 @@ export class E2BSandbox implements Sandbox {
     await this.sdk.kill();
   }
 
-  getState(): { type: "e2b" } & E2BState {
+  getState(): E2BSandboxState {
     return {
       type: "e2b",
       ...(this.name ? { sandboxName: this.name } : {}),

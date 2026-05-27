@@ -4,6 +4,8 @@ import type { E2BSandboxConfig, E2BSandboxConnectConfig } from "./config";
 import { E2BSandbox } from "./sandbox";
 import type { E2BState } from "./state";
 
+const MIN_REMAINING_TIMEOUT_MS = 10_000;
+
 function getRemainingTimeout(
   expiresAt: number | undefined,
 ): number | undefined {
@@ -12,7 +14,7 @@ function getRemainingTimeout(
   }
 
   const remaining = expiresAt - Date.now();
-  return remaining > 10_000 ? remaining : undefined;
+  return remaining > MIN_REMAINING_TIMEOUT_MS ? remaining : undefined;
 }
 
 function toErrorMessage(error: unknown): string {

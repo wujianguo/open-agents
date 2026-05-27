@@ -11,3 +11,5 @@ export interface E2BState {
   snapshotId?: string;
   expiresAt?: number;
 }
+
+export type E2BSandboxState = { type: "e2b" } & E2BState;

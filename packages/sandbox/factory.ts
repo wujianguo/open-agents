@@ -3,7 +3,7 @@ import type { SandboxStatus } from "./types";
 import type { SandboxProvider } from "./provider";
 import { connectE2B } from "./e2b/connect";
 import { connectVercel } from "./vercel/connect";
-import type { E2BState } from "./e2b/state";
+import type { E2BSandboxState } from "./e2b/state";
 import type { VercelState } from "./vercel/state";
 
 // Re-export SandboxStatus from types for convenience
@@ -15,7 +15,7 @@ export type { SandboxStatus };
  */
 export type SandboxState =
   | ({ type: "vercel" } & VercelState)
-  | ({ type: "e2b" } & E2BState);
+  | E2BSandboxState;
 
 /**
  * Base connect options for all sandbox types.
@@ -78,6 +78,8 @@ function connectWithProvider(
       return providerConnectors.vercel(state, options);
     case "e2b":
       return providerConnectors.e2b(state, options);
+    default:
+      throw new Error(`Unsupported sandbox provider: ${String(state)}`);
   }
 }
 

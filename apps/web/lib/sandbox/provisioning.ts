@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   connectSandbox,
+  DEFAULT_SANDBOX_PROVIDER,
   isSandboxProvider,
   type Sandbox,
   type SandboxState,
@@ -112,7 +113,9 @@ function buildSandboxState(session: SessionRecord): SandboxState {
   const source = buildSandboxSource(session);
 
   return {
-    type: isSandboxState(existingState) ? existingState.type : "vercel",
+    type: isSandboxState(existingState)
+      ? existingState.type
+      : DEFAULT_SANDBOX_PROVIDER,
     ...(isSandboxState(existingState) ? existingState : {}),
     sandboxName,
     ...(source ? { source } : {}),

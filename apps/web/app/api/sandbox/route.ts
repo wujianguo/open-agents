@@ -1,5 +1,6 @@
 import {
   connectSandbox,
+  DEFAULT_SANDBOX_PROVIDER,
   SANDBOX_PROVIDERS,
   type SandboxProvider,
   type SandboxState,
@@ -150,7 +151,9 @@ export async function POST(req: Request) {
 
   const sandboxName = getSessionSandboxName(sessionId);
   const sandboxType =
-    body.sandboxType ?? sessionRecord?.sandboxState?.type ?? "vercel";
+    body.sandboxType ??
+    sessionRecord?.sandboxState?.type ??
+    DEFAULT_SANDBOX_PROVIDER;
 
   const source = repoUrl
     ? {

@@ -2,6 +2,7 @@ import {
   connectSandbox,
   DEFAULT_SANDBOX_PROVIDER,
   SANDBOX_PROVIDERS,
+  isSandboxProvider,
   type SandboxProvider,
   type SandboxState,
 } from "@open-agents/sandbox";
@@ -150,10 +151,13 @@ export async function POST(req: Request) {
   sessionRecord = sessionContext.sessionRecord;
 
   const sandboxName = getSessionSandboxName(sessionId);
-  const sandboxType =
+  const requestedSandboxType =
     body.sandboxType ??
     sessionRecord?.sandboxState?.type ??
     DEFAULT_SANDBOX_PROVIDER;
+  const sandboxType = isSandboxProvider(requestedSandboxType)
+    ? requestedSandboxType
+    : DEFAULT_SANDBOX_PROVIDER;
 
   const source = repoUrl
     ? {

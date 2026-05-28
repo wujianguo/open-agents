@@ -114,12 +114,20 @@ function buildSandboxState(session: SessionRecord): SandboxState {
   const persistedState = isSandboxState(existingState)
     ? existingState
     : undefined;
-  const { type: persistedType, ...persistedStateWithoutType } =
-    persistedState ?? {};
+
+  if (!persistedState) {
+    return {
+      type: DEFAULT_SANDBOX_PROVIDER,
+      sandboxName,
+      ...(source ? { source } : {}),
+    };
+  }
+
+  const { type, ...persistedStateWithoutType } = persistedState;
 
   return {
     ...persistedStateWithoutType,
-    type: persistedType ?? DEFAULT_SANDBOX_PROVIDER,
+    type,
     sandboxName,
     ...(source ? { source } : {}),
   };

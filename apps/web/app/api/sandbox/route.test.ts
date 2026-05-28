@@ -200,6 +200,8 @@ mock.module("@/lib/skills/global-skill-installer", () => ({
 }));
 
 mock.module("@open-agents/sandbox", () => ({
+  DEFAULT_SANDBOX_PROVIDER: "vercel",
+  SANDBOX_PROVIDERS: ["vercel", "e2b"],
   connectSandbox: async (config: ConnectConfig) => {
     connectConfigs.push(config);
 

@@ -277,6 +277,15 @@ export class E2BSandbox implements Sandbox {
         currentBranch = source.branch;
       }
 
+      const stateSource = source
+        ? {
+            repo: source.url,
+            ...(source.branch ? { branch: source.branch } : {}),
+            ...(source.token ? { token: source.token } : {}),
+            ...(source.newBranch ? { newBranch: source.newBranch } : {}),
+          }
+        : undefined;
+
       const sandbox = new E2BSandbox({
         sdk,
         workingDirectory: DEFAULT_WORKING_DIRECTORY,
@@ -286,7 +295,7 @@ export class E2BSandbox implements Sandbox {
         timeout,
         startTime: Date.now(),
         name,
-        source,
+        source: stateSource,
         snapshotId: restoreSnapshotId,
       });
 

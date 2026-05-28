@@ -110,7 +110,7 @@ async function configureGitHubToken(
   ).toString("base64");
   await runCommandOrThrow(
     sandbox,
-    `git config --global http.https://github.com/.extraheader ${shellQuote(`AUTHORIZATION: basic ${base64EncodedToken}`)}`,
+    `git config --global http.https://github.com/.extraheader ${shellQuote(`Authorization: basic ${base64EncodedToken}`)}`,
     "/",
     envs,
   );

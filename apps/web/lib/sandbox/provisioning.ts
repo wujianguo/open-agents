@@ -123,11 +123,8 @@ function buildSandboxState(session: SessionRecord): SandboxState {
     };
   }
 
-  const { type, ...persistedStateWithoutType } = persistedState;
-
   return {
-    ...persistedStateWithoutType,
-    type,
+    ...persistedState,
     sandboxName,
     ...(source ? { source } : {}),
   };

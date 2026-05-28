@@ -3,7 +3,7 @@ import type { SandboxHooks } from "../interface";
 export interface E2BSandboxConfig {
   name?: string;
   source?: {
-    url: string;
+    repo: string;
     branch?: string;
     token?: string;
     newBranch?: string;

@@ -36,15 +36,7 @@ function buildCreateConfig(
 ): E2BSandboxConfig {
   return {
     name: state.sandboxName,
-    ...(state.source
-      ? {
-          source: {
-            url: state.source.repo,
-            branch: state.source.branch,
-            newBranch: state.source.newBranch,
-          },
-        }
-      : {}),
+    ...(state.source ? { source: state.source } : {}),
     ...(state.snapshotId ? { restoreSnapshotId: state.snapshotId } : {}),
     env: options?.env,
     githubToken: options?.githubToken,

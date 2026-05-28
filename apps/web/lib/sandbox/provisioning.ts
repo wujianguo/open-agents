@@ -116,7 +116,8 @@ function buildSandboxState(session: SessionRecord): SandboxState {
     : undefined;
 
   return {
-    ...(persistedState ?? { type: DEFAULT_SANDBOX_PROVIDER }),
+    ...persistedState,
+    type: persistedState?.type ?? DEFAULT_SANDBOX_PROVIDER,
     sandboxName,
     ...(source ? { source } : {}),
   };

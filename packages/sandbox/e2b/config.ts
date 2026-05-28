@@ -1,13 +1,9 @@
 import type { SandboxHooks } from "../interface";
+import type { Source } from "../types";
 
 export interface E2BSandboxConfig {
   name?: string;
-  source?: {
-    repo: string;
-    branch?: string;
-    token?: string;
-    newBranch?: string;
-  };
+  source?: Source;
   restoreSnapshotId?: string;
   gitUser?: {
     name: string;

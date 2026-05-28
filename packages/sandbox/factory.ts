@@ -13,9 +13,7 @@ export type { SandboxStatus };
  * Unified sandbox state type.
  * Use `type` discriminator to determine which sandbox implementation to use.
  */
-export type SandboxState =
-  | ({ type: "vercel" } & VercelState)
-  | E2BSandboxState;
+export type SandboxState = ({ type: "vercel" } & VercelState) | E2BSandboxState;
 
 /**
  * Base connect options for all sandbox types.

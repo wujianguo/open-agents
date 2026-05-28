@@ -21,8 +21,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "e2b": "^2.25.0",
-    "@vercel/sandbox": "2.0.0-beta.11"
+    "@vercel/sandbox": "2.0.0-beta.11",
+    "e2b": "^2.25.0"
   },
   "devDependencies": {
     "@open-agents/tsconfig": "workspace:*",

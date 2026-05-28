@@ -170,10 +170,12 @@ export class E2BSandbox implements Sandbox {
     }
   }
 
-  private getCommandEnv(extra?: Record<string, string>): Record<string, string> {
+  private getCommandEnv(
+    extra?: Record<string, string>,
+  ): Record<string, string> {
     return {
-      ...(this.env ?? {}),
-      ...(extra ?? {}),
+      ...this.env,
+      ...extra,
     };
   }
 
@@ -333,9 +335,10 @@ export class E2BSandbox implements Sandbox {
       return null;
     }
 
-    const sdk = await E2BSandboxSDK.connect(resolvedSandboxId, {
-      ...(remainingTimeout !== undefined ? { timeoutMs: remainingTimeout } : {}),
-    });
+    const sdk = await E2BSandboxSDK.connect(
+      resolvedSandboxId,
+      remainingTimeout !== undefined ? { timeoutMs: remainingTimeout } : {},
+    );
 
     const info = await sdk.getInfo();
     const now = Date.now();

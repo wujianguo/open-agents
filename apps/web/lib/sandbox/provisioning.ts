@@ -111,12 +111,12 @@ function buildSandboxState(session: SessionRecord): SandboxState {
   const sandboxName =
     getResumableSandboxName(existingState) ?? getSessionSandboxName(session.id);
   const source = buildSandboxSource(session);
+  const persistedState = isSandboxState(existingState)
+    ? existingState
+    : undefined;
 
   return {
-    type: isSandboxState(existingState)
-      ? existingState.type
-      : DEFAULT_SANDBOX_PROVIDER,
-    ...(isSandboxState(existingState) ? existingState : {}),
+    ...(persistedState ?? { type: DEFAULT_SANDBOX_PROVIDER }),
     sandboxName,
     ...(source ? { source } : {}),
   };

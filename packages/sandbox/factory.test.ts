@@ -40,7 +40,9 @@ describe("connectSandbox", () => {
       connectE2B: e2bConnect,
     }));
 
-    const { connectSandbox } = await import(`./factory?test=${crypto.randomUUID()}`);
+    const { connectSandbox } = await import(
+      `./factory?test=${crypto.randomUUID()}`
+    );
 
     await connectSandbox({ type: "vercel", sandboxName: "session_1" });
 
@@ -59,7 +61,9 @@ describe("connectSandbox", () => {
       connectE2B: e2bConnect,
     }));
 
-    const { connectSandbox } = await import(`./factory?test=${crypto.randomUUID()}`);
+    const { connectSandbox } = await import(
+      `./factory?test=${crypto.randomUUID()}`
+    );
 
     await connectSandbox({ type: "e2b", sandboxName: "session_2" });
 

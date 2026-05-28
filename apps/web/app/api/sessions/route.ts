@@ -1,8 +1,5 @@
 import { nanoid } from "nanoid";
-import {
-  SANDBOX_PROVIDERS,
-  type SandboxProvider,
-} from "@open-agents/sandbox";
+import { SANDBOX_PROVIDERS, type SandboxProvider } from "@open-agents/sandbox";
 import { checkBotProtection } from "@/lib/botid";
 import {
   countSessionsByUserId,
